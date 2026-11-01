@@ -3,8 +3,9 @@ const IMG='https://image.tmdb.org/t/p/w500';
 const BACKDROP='https://image.tmdb.org/t/p/original';
 
 // Public creator reviews. Add TMDB movie IDs, your rating, and your review here.
-// Example: {id:157336,rating:9.5,review:'My review goes here.'}
-const creatorReviews=[];
+const creatorReviews=[
+  {id:8681,rating:9,review:'Taken was a difficult film to watch at times because of its violence and disturbing subject matter. However, the story kept me engaged from beginning to end, and I thought it was very well executed. The acting, especially Liam Neeson’s performance, was excellent and helped make the tension feel convincing. I also liked the film’s fast pace and suspense. I would recommend it to viewers who enjoy intense action thrillers, but younger viewers should be aware that it deals with mature themes, including sexual violence and human trafficking.'}
+];
 
 const grid=document.querySelector('#movieGrid');
 const creatorGrid=document.querySelector('#creatorGrid');
@@ -17,7 +18,7 @@ const creatorEmpty=document.querySelector('#creatorEmpty');
 const modal=document.querySelector('#movieModal');
 let activeMovie=null;
 
-function escapeHtml(value=''){return String(value).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+function escapeHtml(value=''){return String(value).replace(/[&<>'\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[c]))}
 function year(date){return date?date.slice(0,4):'—'}
 function score(value){return value?Number(value).toFixed(1):'N/A'}
 function poster(movie){return movie.poster_path?`${IMG}${movie.poster_path}`:''}
