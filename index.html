@@ -12,9 +12,10 @@
     <a class="brand" href="#">REEL<span>RATE</span></a>
     <nav>
       <a href="#discover">Discover</a>
+      <a href="#popular-movies">Popular Movies</a>
       <a href="#creator">Creator's Movies</a>
       <a href="#watchlist">Watchlist</a>
-      <a href="#popular">About</a>
+      <a href="#about">About</a>
     </nav>
     <button class="search-toggle" aria-label="Focus search">⌕</button>
   </header>
@@ -33,7 +34,7 @@
           <input id="searchInput" type="search" placeholder="Search movies..." autocomplete="off" aria-label="Search movies">
           <button type="submit">Search</button>
         </form>
-        <button id="heroMovieLink" class="hero-suggestion hidden" type="button"><span>POPULAR NOW</span><strong id="heroMovieTitle"></strong><small>View movie →</small></button>
+        <button id="heroMovieLink" class="hero-suggestion hidden" type="button"><span>POPULAR NOW</span><strong id="heroMovieTitle"></strong><small>View more →</small></button>
       </div>
     </section>
 
@@ -44,6 +45,12 @@
       </div>
       <div id="movieGrid" class="movie-grid"></div>
       <p id="emptyState" class="empty hidden">No movies found. Try another search.</p>
+    </section>
+
+    <section id="popular-movies" class="section popular-movies-section">
+      <div class="section-heading"><div><p class="eyebrow">POPULAR NOW</p><h2>Popular Movies</h2></div></div>
+      <p class="creator-intro">Explore movies that are popular right now. Tap any movie to see more details, rate it or add it to your watchlist.</p>
+      <div id="popularMovieGrid" class="movie-grid"></div>
     </section>
 
     <section id="creator" class="creator-section">
@@ -60,7 +67,7 @@
       <p id="watchlistEmpty" class="empty hidden">Your watchlist is empty. Open a movie and tap + Watchlist to save it.</p>
     </section>
 
-    <section id="popular" class="feature-strip">
+    <section id="about" class="feature-strip">
       <p class="eyebrow">ABOUT REELRATE</p><h2>Movies without the clutter.</h2>
       <div class="features">
         <div><strong>01</strong><h3>Discover</h3><p>Search a huge real movie database.</p></div>
