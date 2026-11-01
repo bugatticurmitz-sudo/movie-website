@@ -18,7 +18,9 @@ const creatorEmpty=document.querySelector('#creatorEmpty');
 const modal=document.querySelector('#movieModal');
 let activeMovie=null;
 
-function escapeHtml(value=''){return String(value).replace(/[&<>'\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[c]))}
+function escapeHtml(value=''){
+  return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
 function year(date){return date?date.slice(0,4):'—'}
 function score(value){return value?Number(value).toFixed(1):'N/A'}
 function poster(movie){return movie.poster_path?`${IMG}${movie.poster_path}`:''}
@@ -35,15 +37,17 @@ function render(list){
 }
 
 async function loadCreatorReviews(){
-  creatorGrid.innerHTML='';
-  if(!creatorReviews.length){creatorEmpty.classList.remove('hidden');return}
+  creatorGrid.innerHTML='<p class="loading">Loading creator reviews…</p>';
+  if(!creatorReviews.length){creatorGrid.innerHTML='';creatorEmpty.classList.remove('hidden');return}
   creatorEmpty.classList.add('hidden');
   const results=await Promise.all(creatorReviews.map(async review=>{try{return {review,movie:await api(`/movie/${review.id}`)}}catch(e){return null}}));
+  creatorGrid.innerHTML='';
   results.filter(Boolean).forEach(({review,movie})=>{
     const card=document.createElement('article');card.className='creator-card';const image=poster(movie);
     card.innerHTML=`<button class="creator-poster" aria-label="Open ${escapeHtml(movie.title)}">${image?`<img src="${image}" alt="${escapeHtml(movie.title)} poster" loading="lazy">`:`<span>${escapeHtml(movie.title)}</span>`}</button><div class="creator-review"><p class="eyebrow">MY RATING · ${escapeHtml(review.rating)}/10</p><h3>${escapeHtml(movie.title)} <span>${year(movie.release_date)}</span></h3><p class="review-text">“${escapeHtml(review.review)}”</p><p class="tmdb-score">TMDB rating: ★ ${score(movie.vote_average)}</p></div>`;
     card.querySelector('.creator-poster').addEventListener('click',()=>openMovie(movie.id));creatorGrid.appendChild(card);
   });
+  if(!results.filter(Boolean).length){creatorGrid.innerHTML='<p class="loading">Could not load creator reviews. Please refresh and try again.</p>'}
 }
 
 async function loadTrending(){title.textContent='Trending now';setLoading();try{const data=await api('/trending');render(data.results||[])}catch(e){showError()}}
