@@ -12,8 +12,8 @@
     <a class="brand" href="#">REEL<span>RATE</span></a>
     <nav>
       <a href="#discover">Discover</a>
-      <a href="#popular">Popular</a>
-      <a href="#watchlist">Watchlist</a>
+      <a href="#creator">Creator's Movies</a>
+      <a href="#popular">About</a>
     </nav>
     <button class="search-toggle" aria-label="Focus search">⌕</button>
   </header>
@@ -24,7 +24,7 @@
       <div class="hero-content">
         <p class="eyebrow">YOUR NEXT FAVORITE MOVIE IS HERE</p>
         <h1>Find it. Watch it.<br><span>Rate it.</span></h1>
-        <p class="hero-copy">Discover films, explore ratings and build your own watchlist.</p>
+        <p class="hero-copy">Discover films, explore ratings and see what the creator has watched and reviewed.</p>
         <form id="searchForm" class="search-box">
           <input id="searchInput" type="search" placeholder="Search movies..." autocomplete="off" aria-label="Search movies">
           <button type="submit">Search</button>
@@ -34,20 +34,29 @@
 
     <section id="discover" class="section">
       <div class="section-heading">
-        <div><p class="eyebrow">HANDPICKED FOR YOU</p><h2 id="resultsTitle">Trending now</h2></div>
+        <div><p class="eyebrow">DISCOVER</p><h2 id="resultsTitle">Trending now</h2></div>
         <button id="clearSearch" class="text-button hidden">Clear search</button>
       </div>
       <div id="movieGrid" class="movie-grid"></div>
       <p id="emptyState" class="empty hidden">No movies found. Try another search.</p>
     </section>
 
+    <section id="creator" class="creator-section">
+      <div class="section-heading">
+        <div><p class="eyebrow">CREATOR'S PICKS</p><h2>Movies I've watched</h2></div>
+      </div>
+      <p class="creator-intro">A public collection of movies I've watched, including my personal ratings and reviews.</p>
+      <div id="creatorGrid" class="creator-grid"></div>
+      <p id="creatorEmpty" class="empty hidden">Creator reviews are coming soon.</p>
+    </section>
+
     <section id="popular" class="feature-strip">
-      <p class="eyebrow">WHY REELRATE?</p>
+      <p class="eyebrow">ABOUT REELRATE</p>
       <h2>Movies without the clutter.</h2>
       <div class="features">
-        <div><strong>01</strong><h3>Discover</h3><p>Find something worth watching.</p></div>
-        <div><strong>02</strong><h3>Rate</h3><p>Keep track of what you loved.</p></div>
-        <div><strong>03</strong><h3>Save</h3><p>Build a watchlist for later.</p></div>
+        <div><strong>01</strong><h3>Discover</h3><p>Search a huge real movie database.</p></div>
+        <div><strong>02</strong><h3>Creator Reviews</h3><p>See the creator's watched movies, ratings and opinions.</p></div>
+        <div><strong>03</strong><h3>Save & Rate</h3><p>Visitors can keep a personal watchlist and ratings on their device.</p></div>
       </div>
     </section>
   </main>
