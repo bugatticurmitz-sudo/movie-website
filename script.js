@@ -23,11 +23,7 @@ const heroA=document.querySelector('#heroBackdropA');
 const heroB=document.querySelector('#heroBackdropB');
 const heroMovieLink=document.querySelector('#heroMovieLink');
 const heroMovieTitle=document.querySelector('#heroMovieTitle');
-let activeMovie=null;
-let heroMovies=[];
-let heroIndex=0;
-let heroFront='A';
-let trendingMovies=[];
+let activeMovie=null,heroMovies=[],heroIndex=0,heroFront='A';
 
 function escapeHtml(value=''){return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function year(date){return date?date.slice(0,4):'—'}
@@ -35,56 +31,30 @@ function score(value){return value?Number(value).toFixed(1):'N/A'}
 function poster(movie){return movie.poster_path?`${IMG}${movie.poster_path}`:''}
 function setLoading(message='Loading movies…'){grid.innerHTML=`<p class="loading">${escapeHtml(message)}</p>`;empty.classList.add('hidden')}
 async function api(path){const response=await fetch(`${API}${path}`);if(!response.ok)throw new Error(`API error ${response.status}`);return response.json()}
-
 function getWatchlistMovies(){try{const raw=JSON.parse(localStorage.getItem('reelrate-watchlist-v2')||'[]');return Array.isArray(raw)?raw.filter(m=>m&&Number.isFinite(Number(m.id))).map(m=>({...m,id:Number(m.id)})):[]}catch(e){return []}}
 function saveWatchlistMovies(movies){localStorage.setItem('reelrate-watchlist-v2',JSON.stringify(movies))}
 function isSaved(id){return getWatchlistMovies().some(m=>Number(m.id)===Number(id))}
 
-function movieCard(movie){const card=document.createElement('article');card.className='movie-card';const image=poster(movie);card.innerHTML=`<div class="poster">${image?`<img class="poster-image" src="${image}" alt="${escapeHtml(movie.title)} poster" loading="lazy">`:`<div class="poster-fallback">${escapeHtml(movie.title)}</div>`}<div class="rating"><span>★</span> ${score(movie.vote_average)}</div></div><div class="movie-info"><h3>${escapeHtml(movie.title)}</h3><p>${year(movie.release_date)}</p></div>`;card.addEventListener('click',()=>openMovie(Number(movie.id)));return card}
+function movieCard(movie,rank=null){const card=document.createElement('article');card.className='movie-card';const image=poster(movie);card.innerHTML=`<div class="poster">${rank?`<div class="rank-badge">#${rank}</div>`:''}${image?`<img class="poster-image" src="${image}" alt="${escapeHtml(movie.title)} poster" loading="lazy">`:`<div class="poster-fallback">${escapeHtml(movie.title)}</div>`}<div class="rating"><span>★</span> ${score(movie.vote_average)}</div></div><div class="movie-info"><h3>${escapeHtml(movie.title)}</h3><p>${year(movie.release_date)}</p></div>`;card.addEventListener('click',()=>openMovie(Number(movie.id)));return card}
 function render(list){grid.innerHTML='';empty.classList.toggle('hidden',list.length>0);list.forEach(movie=>grid.appendChild(movieCard(movie)))}
-function renderBestRated(list){
-  if(!bestRatedGrid)return;
-  const movies=(list||[])
-    .filter(movie=>movie&&movie.id&&movie.title&&Number(movie.vote_average)>0)
-    .sort((a,b)=>Number(b.vote_average)-Number(a.vote_average))
-    .slice(0,30);
-  bestRatedGrid.innerHTML='';
-  if(!movies.length){if(bestRatedEmpty)bestRatedEmpty.classList.remove('hidden');return}
-  if(bestRatedEmpty)bestRatedEmpty.classList.add('hidden');
-  movies.forEach(movie=>bestRatedGrid.appendChild(movieCard(movie)));
-}
+function renderBestRated(list){if(!bestRatedGrid)return;const movies=(list||[]).filter(m=>m&&m.id&&m.title&&m.poster_path).slice(0,30);bestRatedGrid.innerHTML='';if(!movies.length){if(bestRatedEmpty)bestRatedEmpty.classList.remove('hidden');return}if(bestRatedEmpty)bestRatedEmpty.classList.add('hidden');movies.forEach((movie,i)=>bestRatedGrid.appendChild(movieCard(movie,i+1)))}
 
-function showHeroMovie(movie,first=false){if(!movie||!movie.backdrop_path||!heroA||!heroB)return;const next=first?heroA:(heroFront==='A'?heroB:heroA);const old=heroFront==='A'?heroA:heroB;next.style.backgroundImage=`url('${BACKDROP}${movie.backdrop_path}')`;if(first){heroA.classList.add('active');heroB.classList.remove('active');heroFront='A'}else{requestAnimationFrame(()=>{next.classList.add('active');old.classList.remove('active')});heroFront=heroFront==='A'?'B':'A'}heroMovieTitle.textContent=movie.title||'Popular movie';heroMovieLink.classList.remove('hidden')}
+function showHeroMovie(movie,first=false){if(!movie||!movie.backdrop_path||!heroA||!heroB)return;const next=first?heroA:(heroFront==='A'?heroB:heroA),old=heroFront==='A'?heroA:heroB;next.style.backgroundImage=`url('${BACKDROP}${movie.backdrop_path}')`;if(first){heroA.classList.add('active');heroB.classList.remove('active');heroFront='A'}else{requestAnimationFrame(()=>{next.classList.add('active');old.classList.remove('active')});heroFront=heroFront==='A'?'B':'A'}heroMovieTitle.textContent=movie.title||'Popular movie';heroMovieLink.classList.remove('hidden')}
 function startHeroSuggestions(list){heroMovies=(list||[]).filter(m=>m&&m.backdrop_path&&m.id).slice(0,8);if(!heroMovies.length)return;heroIndex=0;showHeroMovie(heroMovies[0],true);if(heroMovies.length>1)setInterval(()=>{heroIndex=(heroIndex+1)%heroMovies.length;showHeroMovie(heroMovies[heroIndex])},6500)}
 
+async function loadBestRated(){if(!bestRatedGrid)return;bestRatedGrid.innerHTML='<p class="loading">Loading best-rated movies…</p>';if(bestRatedEmpty)bestRatedEmpty.classList.add('hidden');try{let movies=[];for(let page=1;page<=2;page++){const data=await api(`/top-rated?page=${page}`);movies.push(...(Array.isArray(data.results)?data.results:[]))}movies=movies.filter(m=>Number(m.vote_count)>=500).sort((a,b)=>Number(b.vote_average)-Number(a.vote_average)||Number(b.vote_count)-Number(a.vote_count));renderBestRated(movies)}catch(e){bestRatedGrid.innerHTML='';if(bestRatedEmpty)bestRatedEmpty.classList.remove('hidden')}}
 async function loadCreatorReviews(){creatorGrid.innerHTML='<p class="loading">Loading creator reviews…</p>';if(!creatorReviews.length){creatorGrid.innerHTML='';creatorEmpty.classList.remove('hidden');return}creatorEmpty.classList.add('hidden');const results=await Promise.all(creatorReviews.map(async review=>{try{return {review,movie:await api(`/movie/${review.id}`)}}catch(e){return null}}));creatorGrid.innerHTML='';results.filter(Boolean).forEach(({review,movie})=>{const card=document.createElement('article');card.className='creator-card';const image=poster(movie);card.innerHTML=`<button class="creator-poster" aria-label="Open ${escapeHtml(movie.title)}">${image?`<img src="${image}" alt="${escapeHtml(movie.title)} poster" loading="lazy">`:`<span>${escapeHtml(movie.title)}</span>`}</button><div class="creator-review"><p class="eyebrow">MY RATING · ${escapeHtml(review.rating)}/10</p><h3>${escapeHtml(movie.title)} <span>${year(movie.release_date)}</span></h3><p class="review-text">“${escapeHtml(review.review)}”</p><p class="tmdb-score">TMDB rating: ★ ${score(movie.vote_average)}</p></div>`;card.querySelector('.creator-poster').addEventListener('click',()=>openMovie(Number(movie.id)));creatorGrid.appendChild(card)})}
-
 function loadWatchlist(){if(!watchlistGrid||!watchlistEmpty)return;const movies=getWatchlistMovies();watchlistGrid.innerHTML='';if(!movies.length){watchlistEmpty.classList.remove('hidden');return}watchlistEmpty.classList.add('hidden');movies.forEach(movie=>watchlistGrid.appendChild(movieCard(movie)))}
-
-async function loadTrending(){
-  title.textContent='Trending now';setLoading();
-  if(bestRatedGrid)bestRatedGrid.innerHTML='<p class="loading">Loading best-rated movies…</p>';
-  try{
-    const data=await api('/trending');
-    trendingMovies=Array.isArray(data.results)?data.results:[];
-    render(trendingMovies);
-    renderBestRated(trendingMovies);
-    startHeroSuggestions(trendingMovies);
-  }catch(e){showError();if(bestRatedGrid)bestRatedGrid.innerHTML='';if(bestRatedEmpty)bestRatedEmpty.classList.remove('hidden')}
-}
+async function loadTrending(){title.textContent='Trending now';setLoading();try{const data=await api('/trending');const movies=Array.isArray(data.results)?data.results:[];render(movies);startHeroSuggestions(movies)}catch(e){showError()}}
 async function openMovie(id){modal.classList.remove('hidden');document.body.style.overflow='hidden';document.querySelector('#modalTitle').textContent='Loading…';document.querySelector('#modalMeta').textContent='';document.querySelector('#modalDescription').textContent='';try{const movie=await api(`/movie/${id}`);activeMovie=movie;activeMovie.id=Number(activeMovie.id);const genres=(movie.genres||[]).map(g=>g.name).join(' · ');document.querySelector('#modalTitle').textContent=movie.title;document.querySelector('#modalMeta').textContent=`${year(movie.release_date)}${genres?' · '+genres:''} · ★ ${score(movie.vote_average)}`;document.querySelector('#modalDescription').textContent=movie.overview||'No description available.';const backdrop=document.querySelector('#modalBackdrop');if(movie.backdrop_path){backdrop.style.backgroundImage=`linear-gradient(0deg,rgba(16,19,27,.35),rgba(16,19,27,.15)),url('${BACKDROP}${movie.backdrop_path}')`;backdrop.style.backgroundSize='cover';backdrop.style.backgroundPosition='center'}else backdrop.style.backgroundImage='linear-gradient(145deg,#202533,#0e1016)';document.querySelector('#watchlistButton').textContent=isSaved(activeMovie.id)?'✓ In watchlist':'+ Watchlist';const own=localStorage.getItem(`reelrate-rating-${activeMovie.id}`);document.querySelector('#rateButton').textContent=own?`★ Your rating: ${own}/10`:'★ Rate movie'}catch(e){document.querySelector('#modalTitle').textContent='Could not load movie';document.querySelector('#modalDescription').textContent='Please try again.'}}
 function closeMovie(){modal.classList.add('hidden');document.body.style.overflow=''}
 function showError(){grid.innerHTML='<p class="loading">Could not load movies. Please try again.</p>';empty.classList.add('hidden')}
-
 form.addEventListener('submit',async e=>{e.preventDefault();const q=input.value.trim();if(!q)return;title.textContent=`Results for “${q}”`;clear.classList.remove('hidden');setLoading('Searching…');try{const data=await api(`/search?q=${encodeURIComponent(q)}`);render(data.results||[]);document.querySelector('#discover').scrollIntoView({behavior:'smooth'})}catch(e){showError()}});
 clear.addEventListener('click',()=>{input.value='';clear.classList.add('hidden');loadTrending()});
 document.querySelector('.search-toggle').addEventListener('click',()=>input.focus());document.querySelector('#closeModal').addEventListener('click',closeMovie);modal.addEventListener('click',e=>{if(e.target===modal)closeMovie()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMovie()});
 if(heroMovieLink)heroMovieLink.addEventListener('click',()=>document.querySelector('#best-rated').scrollIntoView({behavior:'smooth'}));
-const bestRatedLink=document.querySelector('a[href="#best-rated"]');if(bestRatedLink)bestRatedLink.addEventListener('click',()=>renderBestRated(trendingMovies));
-
+const bestRatedLink=document.querySelector('a[href="#best-rated"]');if(bestRatedLink)bestRatedLink.addEventListener('click',loadBestRated);
 document.querySelector('#watchlistButton').addEventListener('click',()=>{if(!activeMovie)return;const id=Number(activeMovie.id);let movies=getWatchlistMovies();if(movies.some(m=>Number(m.id)===id)){movies=movies.filter(m=>Number(m.id)!==id)}else{movies.push({id,title:activeMovie.title||'',release_date:activeMovie.release_date||'',poster_path:activeMovie.poster_path||'',vote_average:Number(activeMovie.vote_average)||0})}saveWatchlistMovies(movies);document.querySelector('#watchlistButton').textContent=isSaved(id)?'✓ In watchlist':'+ Watchlist';loadWatchlist()});
 document.querySelector('#rateButton').addEventListener('click',()=>{if(!activeMovie)return;const value=prompt(`Rate ${activeMovie.title} from 1 to 10:`);const rating=Number(value);if(rating>=1&&rating<=10){localStorage.setItem(`reelrate-rating-${activeMovie.id}`,rating);document.querySelector('#rateButton').textContent=`★ Your rating: ${rating}/10`}});
-const watchlistLink=document.querySelector('a[href="#watchlist"]');if(watchlistLink)watchlistLink.addEventListener('click',()=>setTimeout(loadWatchlist,0));
-window.addEventListener('pageshow',loadWatchlist);
-
-loadTrending();loadCreatorReviews();loadWatchlist();
+const watchlistLink=document.querySelector('a[href="#watchlist"]');if(watchlistLink)watchlistLink.addEventListener('click',()=>setTimeout(loadWatchlist,0));window.addEventListener('pageshow',loadWatchlist);
+loadTrending();loadBestRated();loadCreatorReviews();loadWatchlist();
