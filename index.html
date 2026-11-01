@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080a0f">
+  <title>ReelRate — Discover Movies</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="nav">
+    <a class="brand" href="#">REEL<span>RATE</span></a>
+    <nav>
+      <a href="#discover">Discover</a>
+      <a href="#popular">Popular</a>
+      <a href="#watchlist">Watchlist</a>
+    </nav>
+    <button class="search-toggle" aria-label="Focus search">⌕</button>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-glow"></div>
+      <div class="hero-content">
+        <p class="eyebrow">YOUR NEXT FAVORITE MOVIE IS HERE</p>
+        <h1>Find it. Watch it.<br><span>Rate it.</span></h1>
+        <p class="hero-copy">Discover films, explore ratings and build your own watchlist.</p>
+        <form id="searchForm" class="search-box">
+          <input id="searchInput" type="search" placeholder="Search movies..." autocomplete="off" aria-label="Search movies">
+          <button type="submit">Search</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="discover" class="section">
+      <div class="section-heading">
+        <div><p class="eyebrow">HANDPICKED FOR YOU</p><h2 id="resultsTitle">Trending now</h2></div>
+        <button id="clearSearch" class="text-button hidden">Clear search</button>
+      </div>
+      <div id="movieGrid" class="movie-grid"></div>
+      <p id="emptyState" class="empty hidden">No movies found. Try another search.</p>
+    </section>
+
+    <section id="popular" class="feature-strip">
+      <p class="eyebrow">WHY REELRATE?</p>
+      <h2>Movies without the clutter.</h2>
+      <div class="features">
+        <div><strong>01</strong><h3>Discover</h3><p>Find something worth watching.</p></div>
+        <div><strong>02</strong><h3>Rate</h3><p>Keep track of what you loved.</p></div>
+        <div><strong>03</strong><h3>Save</h3><p>Build a watchlist for later.</p></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="movieModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-card">
+      <button id="closeModal" class="modal-close" aria-label="Close">×</button>
+      <div id="modalBackdrop" class="modal-backdrop"></div>
+      <div class="modal-content">
+        <p id="modalMeta" class="eyebrow"></p>
+        <h2 id="modalTitle"></h2>
+        <p id="modalDescription"></p>
+        <div class="modal-actions">
+          <button id="rateButton" class="primary-button">★ Rate movie</button>
+          <button id="watchlistButton" class="secondary-button">+ Watchlist</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer><a class="brand" href="#">REEL<span>RATE</span></a><p>Discover. Watch. Rate.</p></footer>
+  <script src="script.js"></script>
+</body>
+</html>
