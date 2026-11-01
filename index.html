@@ -21,6 +21,9 @@
 
   <main>
     <section class="hero">
+      <div id="heroBackdropA" class="hero-movie-backdrop active"></div>
+      <div id="heroBackdropB" class="hero-movie-backdrop"></div>
+      <div class="hero-shade"></div>
       <div class="hero-glow"></div>
       <div class="hero-content">
         <p class="eyebrow">YOUR NEXT FAVORITE MOVIE IS HERE</p>
@@ -30,6 +33,7 @@
           <input id="searchInput" type="search" placeholder="Search movies..." autocomplete="off" aria-label="Search movies">
           <button type="submit">Search</button>
         </form>
+        <button id="heroMovieLink" class="hero-suggestion hidden" type="button"><span>POPULAR NOW</span><strong id="heroMovieTitle"></strong><small>View movie →</small></button>
       </div>
     </section>
 
