@@ -27,6 +27,9 @@ function setLoading(message='Loading movies…'){grid.innerHTML=`<p class="loadi
 async function api(path){const response=await fetch(`${API}${path}`);if(!response.ok)throw new Error(`API error ${response.status}`);return response.json()}
 function getWatchlist(){try{const value=JSON.parse(localStorage.getItem('reelrate-watchlist')||'[]');return Array.isArray(value)?value.map(Number).filter(Number.isFinite):[]}catch(e){return []}}
 function saveWatchlist(ids){localStorage.setItem('reelrate-watchlist',JSON.stringify([...new Set(ids.map(Number))]))}
+function getWatchlistCache(){try{return JSON.parse(localStorage.getItem('reelrate-watchlist-movies')||'{}')||{}}catch(e){return {}}}
+function saveMovieToCache(movie){const cache=getWatchlistCache();cache[String(Number(movie.id))]={id:Number(movie.id),title:movie.title,release_date:movie.release_date||'',poster_path:movie.poster_path||'',vote_average:movie.vote_average||0};localStorage.setItem('reelrate-watchlist-movies',JSON.stringify(cache))}
+function removeMovieFromCache(id){const cache=getWatchlistCache();delete cache[String(Number(id))];localStorage.setItem('reelrate-watchlist-movies',JSON.stringify(cache))}
 
 function movieCard(movie){
   const card=document.createElement('article');card.className='movie-card';const image=poster(movie);
@@ -51,10 +54,16 @@ async function loadCreatorReviews(){
 async function loadWatchlist(){
   const saved=getWatchlist();watchlistGrid.innerHTML='';
   if(!saved.length){watchlistEmpty.classList.remove('hidden');return}
-  watchlistEmpty.classList.add('hidden');watchlistGrid.innerHTML='<p class="loading">Loading watchlist…</p>';
-  const movies=await Promise.all(saved.map(async id=>{try{return await api(`/movie/${id}`)}catch(e){return null}}));
-  watchlistGrid.innerHTML='';movies.filter(Boolean).forEach(movie=>watchlistGrid.appendChild(movieCard(movie)));
-  if(!movies.filter(Boolean).length)watchlistGrid.innerHTML='<p class="loading">Could not load your watchlist. Please refresh and try again.</p>';
+  watchlistEmpty.classList.add('hidden');
+  const cache=getWatchlistCache();
+  const movies=[];
+  for(const id of saved){
+    let movie=cache[String(id)]||null;
+    if(!movie){try{movie=await api(`/movie/${id}`);if(movie)saveMovieToCache(movie)}catch(e){movie=null}}
+    if(movie)movies.push(movie);
+  }
+  watchlistGrid.innerHTML='';movies.forEach(movie=>watchlistGrid.appendChild(movieCard(movie)));
+  if(!movies.length)watchlistGrid.innerHTML='<p class="loading">Your saved movie could not be displayed. Remove it and add it again.</p>';
 }
 
 async function loadTrending(){title.textContent='Trending now';setLoading();try{const data=await api('/trending');render(data.results||[])}catch(e){showError()}}
@@ -76,7 +85,7 @@ document.querySelector('.search-toggle').addEventListener('click',()=>input.focu
 document.querySelector('#watchlistButton').addEventListener('click',async()=>{
   if(!activeMovie)return;
   const id=Number(activeMovie.id);let saved=getWatchlist();
-  if(saved.includes(id))saved=saved.filter(savedId=>savedId!==id);else saved.push(id);
+  if(saved.includes(id)){saved=saved.filter(savedId=>savedId!==id);removeMovieFromCache(id)}else{saved.push(id);saveMovieToCache(activeMovie)}
   saveWatchlist(saved);
   const nowSaved=getWatchlist();
   document.querySelector('#watchlistButton').textContent=nowSaved.includes(id)?'✓ In watchlist':'+ Watchlist';
