@@ -13,6 +13,7 @@
     <nav>
       <a href="#discover">Discover</a>
       <a href="#creator">Creator's Movies</a>
+      <a href="#watchlist">Watchlist</a>
       <a href="#popular">About</a>
     </nav>
     <button class="search-toggle" aria-label="Focus search">⌕</button>
@@ -42,17 +43,21 @@
     </section>
 
     <section id="creator" class="creator-section">
-      <div class="section-heading">
-        <div><p class="eyebrow">CREATOR'S PICKS</p><h2>Movies I've watched</h2></div>
-      </div>
+      <div class="section-heading"><div><p class="eyebrow">CREATOR'S PICKS</p><h2>Movies I've watched</h2></div></div>
       <p class="creator-intro">A public collection of movies I've watched, including my personal ratings and reviews.</p>
       <div id="creatorGrid" class="creator-grid"></div>
       <p id="creatorEmpty" class="empty hidden">Creator reviews are coming soon.</p>
     </section>
 
+    <section id="watchlist" class="section">
+      <div class="section-heading"><div><p class="eyebrow">SAVED FOR LATER</p><h2>My Watchlist</h2></div></div>
+      <p class="creator-intro">Movies you save are kept on this device.</p>
+      <div id="watchlistGrid" class="movie-grid"></div>
+      <p id="watchlistEmpty" class="empty hidden">Your watchlist is empty. Open a movie and tap + Watchlist to save it.</p>
+    </section>
+
     <section id="popular" class="feature-strip">
-      <p class="eyebrow">ABOUT REELRATE</p>
-      <h2>Movies without the clutter.</h2>
+      <p class="eyebrow">ABOUT REELRATE</p><h2>Movies without the clutter.</h2>
       <div class="features">
         <div><strong>01</strong><h3>Discover</h3><p>Search a huge real movie database.</p></div>
         <div><strong>02</strong><h3>Creator Reviews</h3><p>See the creator's watched movies, ratings and opinions.</p></div>
@@ -66,13 +71,8 @@
       <button id="closeModal" class="modal-close" aria-label="Close">×</button>
       <div id="modalBackdrop" class="modal-backdrop"></div>
       <div class="modal-content">
-        <p id="modalMeta" class="eyebrow"></p>
-        <h2 id="modalTitle"></h2>
-        <p id="modalDescription"></p>
-        <div class="modal-actions">
-          <button id="rateButton" class="primary-button">★ Rate movie</button>
-          <button id="watchlistButton" class="secondary-button">+ Watchlist</button>
-        </div>
+        <p id="modalMeta" class="eyebrow"></p><h2 id="modalTitle"></h2><p id="modalDescription"></p>
+        <div class="modal-actions"><button id="rateButton" class="primary-button">★ Rate movie</button><button id="watchlistButton" class="secondary-button">+ Watchlist</button></div>
       </div>
     </div>
   </div>
