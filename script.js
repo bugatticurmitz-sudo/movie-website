@@ -1,24 +1,99 @@
-const movies=[
-{id:1,title:'Dune: Part Two',year:2024,genre:'Sci-Fi · Adventure',rating:8.5,description:'Paul Atreides unites with Chani and the Fremen while seeking revenge against those who destroyed his family.',bg:'linear-gradient(145deg,#b56f36,#291b15 65%,#0b0c10)'},
-{id:2,title:'The Batman',year:2022,genre:'Crime · Mystery',rating:7.8,description:'A masked vigilante follows a trail of corruption through Gotham while pursuing a mysterious killer.',bg:'linear-gradient(145deg,#7a151b,#151116 58%,#050608)'},
-{id:3,title:'Interstellar',year:2014,genre:'Sci-Fi · Drama',rating:8.7,description:'Explorers travel through a wormhole in space in an attempt to secure a future for humanity.',bg:'linear-gradient(145deg,#718291,#242b31 58%,#08090c)'},
-{id:4,title:'Spider-Man: Across the Spider-Verse',year:2023,genre:'Animation · Action',rating:8.6,description:'Miles Morales journeys across the multiverse and meets a team of Spider-People charged with protecting it.',bg:'linear-gradient(145deg,#b63886,#303d9d 48%,#101326)'},
-{id:5,title:'Oppenheimer',year:2023,genre:'Drama · History',rating:8.3,description:'The story of physicist J. Robert Oppenheimer and the world-changing project he helped lead.',bg:'linear-gradient(145deg,#e7782c,#502115 48%,#090909)'},
-{id:6,title:'Parasite',year:2019,genre:'Thriller · Drama',rating:8.5,description:'A struggling family gradually enters the lives of a wealthy household with unexpected consequences.',bg:'linear-gradient(145deg,#5e8c76,#1d3029 58%,#090c0b)'},
-{id:7,title:'Whiplash',year:2014,genre:'Drama · Music',rating:8.5,description:'An ambitious young drummer is pushed to his limits by a demanding music instructor.',bg:'linear-gradient(145deg,#d3a15a,#4a291b 48%,#090808)'},
-{id:8,title:'Everything Everywhere All at Once',year:2022,genre:'Action · Comedy',rating:7.8,description:'An overwhelmed woman is swept into a strange adventure where she must connect with versions of herself across universes.',bg:'linear-gradient(145deg,#6744a4,#b64360 52%,#11101b)'},
-{id:9,title:'The Dark Knight',year:2008,genre:'Action · Crime',rating:9.0,description:'Batman faces a criminal mastermind whose reign of chaos pushes Gotham and its heroes to their limits.',bg:'linear-gradient(145deg,#3e667e,#16242d 55%,#06080a)'},
-{id:10,title:'Spirited Away',year:2001,genre:'Animation · Fantasy',rating:8.6,description:'A young girl enters a mysterious spirit world and must find the courage to save her family.',bg:'linear-gradient(145deg,#80aeba,#45646d 50%,#172124)'}
-];
-const grid=document.querySelector('#movieGrid'),form=document.querySelector('#searchForm'),input=document.querySelector('#searchInput'),title=document.querySelector('#resultsTitle'),clear=document.querySelector('#clearSearch'),empty=document.querySelector('#emptyState'),modal=document.querySelector('#movieModal');
+const API='https://reelrate-api.bugatticurmitz.workers.dev';
+const IMG='https://image.tmdb.org/t/p/w500';
+const BACKDROP='https://image.tmdb.org/t/p/original';
+
+const grid=document.querySelector('#movieGrid');
+const form=document.querySelector('#searchForm');
+const input=document.querySelector('#searchInput');
+const title=document.querySelector('#resultsTitle');
+const clear=document.querySelector('#clearSearch');
+const empty=document.querySelector('#emptyState');
+const modal=document.querySelector('#movieModal');
 let activeMovie=null;
-function initials(name){return name.split(/\s+/).filter(w=>!['the','a','an','and','at','all'].includes(w.toLowerCase())).slice(0,2).map(w=>w[0]).join('')}
-function render(list){grid.innerHTML='';empty.classList.toggle('hidden',list.length>0);list.forEach(movie=>{const card=document.createElement('article');card.className='movie-card';card.innerHTML=`<div class="poster"><div class="poster-art" style="--poster-bg:${movie.bg}">${initials(movie.title)}</div><div class="rating"><span>★</span> ${movie.rating}</div></div><div class="movie-info"><h3>${movie.title}</h3><p>${movie.year} · ${movie.genre}</p></div>`;card.addEventListener('click',()=>openMovie(movie));grid.appendChild(card)})}
-function openMovie(movie){activeMovie=movie;document.querySelector('#modalTitle').textContent=movie.title;document.querySelector('#modalMeta').textContent=`${movie.year} · ${movie.genre} · ★ ${movie.rating}`;document.querySelector('#modalDescription').textContent=movie.description;document.querySelector('#modalBackdrop').style.setProperty('--poster-bg',movie.bg);const saved=JSON.parse(localStorage.getItem('reelrate-watchlist')||'[]');document.querySelector('#watchlistButton').textContent=saved.includes(movie.id)?'✓ In watchlist':'+ Watchlist';modal.classList.remove('hidden');document.body.style.overflow='hidden'}
+
+function escapeHtml(value=''){
+  return String(value).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+}
+function year(date){return date?date.slice(0,4):'—'}
+function score(value){return value?Number(value).toFixed(1):'N/A'}
+function poster(movie){return movie.poster_path?`${IMG}${movie.poster_path}`:''}
+function setLoading(message='Loading movies…'){
+  grid.innerHTML=`<p class="loading">${escapeHtml(message)}</p>`;
+  empty.classList.add('hidden');
+}
+async function api(path){
+  const response=await fetch(`${API}${path}`);
+  if(!response.ok)throw new Error(`API error ${response.status}`);
+  return response.json();
+}
+function render(list){
+  grid.innerHTML='';
+  empty.classList.toggle('hidden',list.length>0);
+  list.forEach(movie=>{
+    const card=document.createElement('article');
+    card.className='movie-card';
+    const image=poster(movie);
+    card.innerHTML=`<div class="poster">${image?`<img class="poster-image" src="${image}" alt="${escapeHtml(movie.title)} poster" loading="lazy">`:`<div class="poster-fallback">${escapeHtml(movie.title)}</div>`}<div class="rating"><span>★</span> ${score(movie.vote_average)}</div></div><div class="movie-info"><h3>${escapeHtml(movie.title)}</h3><p>${year(movie.release_date)}</p></div>`;
+    card.addEventListener('click',()=>openMovie(movie.id));
+    grid.appendChild(card);
+  });
+}
+async function loadTrending(){
+  title.textContent='Trending now';
+  setLoading();
+  try{const data=await api('/trending');render(data.results||[])}catch(e){showError()}
+}
+async function openMovie(id){
+  modal.classList.remove('hidden');
+  document.body.style.overflow='hidden';
+  document.querySelector('#modalTitle').textContent='Loading…';
+  document.querySelector('#modalMeta').textContent='';
+  document.querySelector('#modalDescription').textContent='';
+  try{
+    const movie=await api(`/movie/${id}`);
+    activeMovie=movie;
+    const genres=(movie.genres||[]).map(g=>g.name).join(' · ');
+    document.querySelector('#modalTitle').textContent=movie.title;
+    document.querySelector('#modalMeta').textContent=`${year(movie.release_date)}${genres?' · '+genres:''} · ★ ${score(movie.vote_average)}`;
+    document.querySelector('#modalDescription').textContent=movie.overview||'No description available.';
+    const backdrop=document.querySelector('#modalBackdrop');
+    if(movie.backdrop_path){backdrop.style.backgroundImage=`linear-gradient(0deg,rgba(16,19,27,.35),rgba(16,19,27,.15)),url('${BACKDROP}${movie.backdrop_path}')`;backdrop.style.backgroundSize='cover';backdrop.style.backgroundPosition='center'}
+    else{backdrop.style.backgroundImage='linear-gradient(145deg,#202533,#0e1016)'}
+    const saved=JSON.parse(localStorage.getItem('reelrate-watchlist')||'[]');
+    document.querySelector('#watchlistButton').textContent=saved.includes(movie.id)?'✓ In watchlist':'+ Watchlist';
+    const own=localStorage.getItem(`reelrate-rating-${movie.id}`);
+    document.querySelector('#rateButton').textContent=own?`★ Your rating: ${own}/10`:'★ Rate movie';
+  }catch(e){document.querySelector('#modalTitle').textContent='Could not load movie';document.querySelector('#modalDescription').textContent='Please try again.'}
+}
 function closeMovie(){modal.classList.add('hidden');document.body.style.overflow=''}
-form.addEventListener('submit',e=>{e.preventDefault();const q=input.value.trim().toLowerCase();if(!q)return;const found=movies.filter(m=>(m.title+' '+m.genre+' '+m.year).toLowerCase().includes(q));title.textContent=`Results for “${input.value.trim()}”`;clear.classList.remove('hidden');render(found)});
-clear.addEventListener('click',()=>{input.value='';title.textContent='Trending now';clear.classList.add('hidden');render(movies)});
-document.querySelector('.search-toggle').addEventListener('click',()=>input.focus());document.querySelector('#closeModal').addEventListener('click',closeMovie);modal.addEventListener('click',e=>{if(e.target===modal)closeMovie()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMovie()});
-document.querySelector('#watchlistButton').addEventListener('click',()=>{if(!activeMovie)return;let saved=JSON.parse(localStorage.getItem('reelrate-watchlist')||'[]');if(saved.includes(activeMovie.id))saved=saved.filter(id=>id!==activeMovie.id);else saved.push(activeMovie.id);localStorage.setItem('reelrate-watchlist',JSON.stringify(saved));document.querySelector('#watchlistButton').textContent=saved.includes(activeMovie.id)?'✓ In watchlist':'+ Watchlist'});
-document.querySelector('#rateButton').addEventListener('click',()=>{if(!activeMovie)return;const value=prompt(`Rate ${activeMovie.title} from 1 to 10:`);const rating=Number(value);if(rating>=1&&rating<=10){localStorage.setItem(`reelrate-rating-${activeMovie.id}`,rating);document.querySelector('#rateButton').textContent=`★ Your rating: ${rating}/10`}});
-render(movies);
+function showError(){grid.innerHTML='<p class="loading">Could not load movies. Please try again.</p>';empty.classList.add('hidden')}
+
+form.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const q=input.value.trim();
+  if(!q)return;
+  title.textContent=`Results for “${q}”`;
+  clear.classList.remove('hidden');
+  setLoading('Searching…');
+  try{const data=await api(`/search?q=${encodeURIComponent(q)}`);render(data.results||[])}catch(e){showError()}
+});
+clear.addEventListener('click',()=>{input.value='';clear.classList.add('hidden');loadTrending()});
+document.querySelector('.search-toggle').addEventListener('click',()=>input.focus());
+document.querySelector('#closeModal').addEventListener('click',closeMovie);
+modal.addEventListener('click',e=>{if(e.target===modal)closeMovie()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMovie()});
+document.querySelector('#watchlistButton').addEventListener('click',()=>{
+  if(!activeMovie)return;
+  let saved=JSON.parse(localStorage.getItem('reelrate-watchlist')||'[]');
+  if(saved.includes(activeMovie.id))saved=saved.filter(id=>id!==activeMovie.id);else saved.push(activeMovie.id);
+  localStorage.setItem('reelrate-watchlist',JSON.stringify(saved));
+  document.querySelector('#watchlistButton').textContent=saved.includes(activeMovie.id)?'✓ In watchlist':'+ Watchlist';
+});
+document.querySelector('#rateButton').addEventListener('click',()=>{
+  if(!activeMovie)return;
+  const value=prompt(`Rate ${activeMovie.title} from 1 to 10:`);
+  const rating=Number(value);
+  if(rating>=1&&rating<=10){localStorage.setItem(`reelrate-rating-${activeMovie.id}`,rating);document.querySelector('#rateButton').textContent=`★ Your rating: ${rating}/10`}
+});
+
+loadTrending();
