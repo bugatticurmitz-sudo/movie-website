@@ -17,7 +17,14 @@ const clear=document.querySelector('#clearSearch');
 const empty=document.querySelector('#emptyState');
 const creatorEmpty=document.querySelector('#creatorEmpty');
 const modal=document.querySelector('#movieModal');
+const heroA=document.querySelector('#heroBackdropA');
+const heroB=document.querySelector('#heroBackdropB');
+const heroMovieLink=document.querySelector('#heroMovieLink');
+const heroMovieTitle=document.querySelector('#heroMovieTitle');
 let activeMovie=null;
+let heroMovies=[];
+let heroIndex=0;
+let heroFront='A';
 
 function escapeHtml(value=''){return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function year(date){return date?date.slice(0,4):'—'}
@@ -42,6 +49,26 @@ function movieCard(movie){
 }
 function render(list){grid.innerHTML='';empty.classList.toggle('hidden',list.length>0);list.forEach(movie=>grid.appendChild(movieCard(movie)))}
 
+function showHeroMovie(movie,first=false){
+  if(!movie||!movie.backdrop_path||!heroA||!heroB)return;
+  const next=first?heroA:(heroFront==='A'?heroB:heroA);
+  const old=heroFront==='A'?heroA:heroB;
+  next.style.backgroundImage=`url('${BACKDROP}${movie.backdrop_path}')`;
+  if(first){heroA.classList.add('active');heroB.classList.remove('active');heroFront='A'}else{
+    requestAnimationFrame(()=>{next.classList.add('active');old.classList.remove('active')});
+    heroFront=heroFront==='A'?'B':'A';
+  }
+  heroMovieTitle.textContent=movie.title||'Popular movie';
+  heroMovieLink.dataset.movieId=String(movie.id);
+  heroMovieLink.classList.remove('hidden');
+}
+function startHeroSuggestions(list){
+  heroMovies=(list||[]).filter(m=>m&&m.backdrop_path&&m.id).slice(0,8);
+  if(!heroMovies.length)return;
+  heroIndex=0;showHeroMovie(heroMovies[0],true);
+  if(heroMovies.length>1)setInterval(()=>{heroIndex=(heroIndex+1)%heroMovies.length;showHeroMovie(heroMovies[heroIndex])},6500);
+}
+
 async function loadCreatorReviews(){
   creatorGrid.innerHTML='<p class="loading">Loading creator reviews…</p>';
   if(!creatorReviews.length){creatorGrid.innerHTML='';creatorEmpty.classList.remove('hidden');return}
@@ -63,7 +90,7 @@ function loadWatchlist(){
   movies.forEach(movie=>watchlistGrid.appendChild(movieCard(movie)));
 }
 
-async function loadTrending(){title.textContent='Trending now';setLoading();try{const data=await api('/trending');render(data.results||[])}catch(e){showError()}}
+async function loadTrending(){title.textContent='Trending now';setLoading();try{const data=await api('/trending');const movies=data.results||[];render(movies);startHeroSuggestions(movies)}catch(e){showError()}}
 async function openMovie(id){
   modal.classList.remove('hidden');document.body.style.overflow='hidden';document.querySelector('#modalTitle').textContent='Loading…';document.querySelector('#modalMeta').textContent='';document.querySelector('#modalDescription').textContent='';
   try{
@@ -79,6 +106,7 @@ function showError(){grid.innerHTML='<p class="loading">Could not load movies. P
 form.addEventListener('submit',async e=>{e.preventDefault();const q=input.value.trim();if(!q)return;title.textContent=`Results for “${q}”`;clear.classList.remove('hidden');setLoading('Searching…');try{const data=await api(`/search?q=${encodeURIComponent(q)}`);render(data.results||[])}catch(e){showError()}});
 clear.addEventListener('click',()=>{input.value='';clear.classList.add('hidden');loadTrending()});
 document.querySelector('.search-toggle').addEventListener('click',()=>input.focus());document.querySelector('#closeModal').addEventListener('click',closeMovie);modal.addEventListener('click',e=>{if(e.target===modal)closeMovie()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMovie()});
+if(heroMovieLink)heroMovieLink.addEventListener('click',()=>{const id=Number(heroMovieLink.dataset.movieId);if(id)openMovie(id)});
 
 document.querySelector('#watchlistButton').addEventListener('click',()=>{
   if(!activeMovie)return;
