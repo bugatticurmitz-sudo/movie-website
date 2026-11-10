@@ -1,7 +1,7 @@
 const API='https://reelrate-api.bugatticurmitz.workers.dev';
 const IMG='https://image.tmdb.org/t/p/w500';
 const BACKDROP='https://image.tmdb.org/t/p/original';
-const SUPABASE_URL='https://jumcnxhrdjlgiccutcjm.supabase.co';
+const SUPABASE_URL='https://jumcnxhrdjlglccutcjm.supabase.co';
 const SUPABASE_KEY=['sb','publishable','KptNbbnS90TYvBBAEmMzCQ','cHkYaED6'].join('_');
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const creatorReviews=[
