@@ -54,4 +54,4 @@ authForm.addEventListener('submit',async e=>{e.preventDefault();authMessage.text
 logoutButton.addEventListener('click',async()=>{await db.auth.signOut();closeAuth()});
 const watchlistLink=$('a[href="#watchlist"]');if(watchlistLink)watchlistLink.addEventListener('click',()=>setTimeout(loadWatchlist,0));
 db.auth.onAuthStateChange((_event,session)=>{setTimeout(()=>applySession(session),0)});
-(async()=>{const {data}=await db.auth.getSession();await applySession(data.session);loadTrending();loadCreatorReviews()})();
+loadTrending();loadCreatorReviews();(async()=>{try{const {data}=await db.auth.getSession();await applySession(data.session)}catch(e){console.warn('Account sync unavailable; movie browsing will continue.',e);currentUser=null;updateAccountUI();loadWatchlist()}})();
